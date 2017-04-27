@@ -4,15 +4,17 @@ Made by: Oscar Blanco and Victor Colome
 '''
 
 from Queue import PriorityQueue
+from pyactor.context import interval
 
 class Peer(): # Heredar de Sequencer o juntarlos en 1
-    _tell = ['attach_group', 'attach_sequencer', 'multicast', 'receive', 'process_msg', 'check_queue', 'get_queue', 'init_start', 'announce_me']
-    _ask = ['']
+    _tell = ['attach_group', 'attach_sequencer', 'multicast', 'receive', 'process_msg', 'check_queue', 'get_queue', 'init_start', 'announce_me', 'set_counter']
+    _ask = ['get_counter', 'is_sequencer']
     _ref = ['attach_group', 'attach_sequencer']
 
     def __init__(self):
         self.priority_queue = PriorityQueue()
         self.wait_queue = PriorityQueue()
+        self.count = 0
 
     def init_start(self):
         self.interval = interval(self.host, 3, self.proxy, 'announce_me')
@@ -55,3 +57,14 @@ class Peer(): # Heredar de Sequencer o juntarlos en 1
 
     def announce_me(self):
         self.group.announce(self.proxy)
+
+    ### Sequencer functionality ###
+    def get_counter(self):
+        self.count = self.count + 1
+        return self.count
+
+    def set_counter(self, count):
+        self.count = count
+
+    def is_sequencer(self):
+        return self.id == self.sequencer.id
