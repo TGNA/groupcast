@@ -14,6 +14,9 @@ class Peer():                                           # Heredar de Sequencer o
         self.priority_queue = PriorityQueue()
         self.wait_queue = PriorityQueue()
 
+    def init_start(self):
+        self.interval = interval(self.host, 3, self.proxy, 'announce_me')
+
     def attach_group(self, group):
         self.group = group
 
@@ -49,3 +52,6 @@ class Peer():                                           # Heredar de Sequencer o
         for tuple in self.priority_queue.queue:
             aux.append(tuple[1])
         return aux
+
+    def announce_me(self):
+        self.group.announce(self.proxy)

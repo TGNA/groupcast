@@ -24,6 +24,11 @@ p3.attach_sequencer(seq)
 group.join(p1.proxy)
 group.join(p2.proxy)
 group.join(p3.proxy)
+# Start intervals
+group.init_start()
+p1.init_start()
+p2.init_start()
+p3.init_start()
 
 p1.multicast("HOLA")
 p2.multicast("QUE")
