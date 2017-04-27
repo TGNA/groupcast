@@ -4,9 +4,9 @@ Made by: Oscar Blanco and Victor Colome
 '''
 
 class Group():
-    _tell = ['join', 'leave']
+    _tell = ['join', 'leave', 'init_start', 'remove_unannounced', 'announce']
     _ask = ['get_members']
-    _ref = ['join', 'leave', 'get_members']
+    _ref = ['join', 'leave', 'get_members', 'announce']
 
     def __init__(self):
         self.peers = {}
