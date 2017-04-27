@@ -37,14 +37,14 @@ class Peer():                                           # Heredar de Sequencer o
     def process_msg(self, priority, msg):
         self.priority_queue.put((priority, msg))
 
-    def check_queue(priority):
+    def check_queue(self, priority):
         for tuple in self.wait_queue.queue:
             priority = priority + 1
             if tuple[0] == priority:
                 self.wait_queue.get()
                 self.process_msg(tuple[0], tuple[1])
 
-    def get_queue():
+    def get_queue(self):
         aux = []
         for tuple in self.priority_queue.queue:
             aux.append(tuple[1])
