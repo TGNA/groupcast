@@ -3,6 +3,7 @@ Group
 Made by: Oscar Blanco and Victor Colome
 '''
 
+
 class Group():
     _tell = ['join', 'leave', 'init_start', 'remove_unannounced', 'announce']
     _ask = ['get_members']

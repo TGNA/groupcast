@@ -3,7 +3,9 @@ Peer
 Made by: Oscar Blanco and Victor Colome
 '''
 
+
 from Queue import PriorityQueue
+
 
 class Peer(): # Heredar de Sequencer o juntarlos en 1
     _tell = ['attach_group', 'attach_sequencer', 'multicast', 'receive', 'process_msg', 'check_queue', 'get_queue', 'init_start', 'announce_me']

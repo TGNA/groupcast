@@ -3,6 +3,7 @@ Sequencer
 Made by: Oscar Blanco and Victor Colome
 '''
 
+
 class Sequencer():
 
     def __init__(self):
