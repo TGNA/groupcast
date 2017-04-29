@@ -30,7 +30,7 @@ for i in range(N):
     peers.append(p)
 
 for i in range(10):
-    choice(peers).multicast("Message " + str(i))
+    choice(peers).multicast(str(i))
 
 sleep(3)
 
