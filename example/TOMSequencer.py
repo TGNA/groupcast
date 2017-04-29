@@ -3,36 +3,36 @@ Main TOMSequencer
 Made by: Oscar Blanco and Victor Colome
 '''
 
-from groupcast.Peer import *
-from groupcast.Group import *
-from pyactor.context import set_context, create_host, serve_forever
-from groupcast.Sequencer import *
+from groupcast.peer import *
+from groupcast.group import *
+from groupcast.printer import *
+from pyactor.context import set_context, create_host, sleep
+from random import choice
 
 set_context()
 host = create_host()
 
 N = 3                                       # Number of Peers
 peers = []
+
+printer = host.spawn('printer', Printer)
+
 # Group
 group = host.spawn('Group', Group)
+group.attach_printer(printer)
 group.init_start()
-# Sequencer
-seq = host.spawn('Peer' + N, Peer)
-seq.attach_group(group)
-group.join(seq.proxy)
-seq.init_start()
+
 # Peers
 for i in range(N):
-    peers[i] = host.spawn('Peer' + i, Peer) # Spawn Peer
-    peers[i].attach_group(group)            # Attach Group
-    peers[i].attach_sequencer(seq)          # Attach Sequencer
-    group.join(peers[i].proxy)              # Join to Group
-    peers[i].init_start()                   # Start interval
+    p = host.spawn('Peer' + str(i), Peer) # Spawn Peer
+    p.attach_group(group)            # Attach Group
+    p.attach_printer(printer)
+    peers.append(p)
 
-for i in range(N):
-    peers[i].multicast("Message " + i)
+for i in range(10):
+    choice(peers).multicast("Message " + str(i))
 
 sleep(3)
 
-for peer in group.get_members():
-    print (peer.id + ": " + peer.get_queue())
+for peer in peers:
+    print (peer.get_id() + ": " + ",".join(peer.get_queue()))
