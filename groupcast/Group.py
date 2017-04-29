@@ -20,18 +20,21 @@ class Group():
 
     def leave(self, peer):
         self.peers.pop(peer, None)
+        if peer.is_sequencer():
+            newSeq = choice(self.peers.keys())
+            newSeq.set_counter(peer.get_counter()-1)
+            for p in self.peers:
+                p.attach_sequencer(newSeq)
 
     def get_members(self):
         return list(self.peers)
 
     def remove_unannounced(self, diff_time=10):
         current = datetime.now()
-        aux_dict = {}
         for peer, last_update in self.peers.items():
             diff = current - last_update
-            if diff.total_seconds() <= diff_time:
-                aux_dict[peer] = last_update
-        self.peers = aux_dict
+            if diff.total_seconds() > diff_time:
+                self.leave(peer)
 
     def announce(self, peer):
         self.peers[peer] = datetime.now()
