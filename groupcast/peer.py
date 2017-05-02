@@ -27,7 +27,7 @@ class UniquePriorityQueue(PriorityQueue):
 
 
 class Peer:
-    _tell = ['attach_printer', 'attach_group', 'attach_sequencer', 'multicast', 'receive', 'process_msg', 'check_queue', 'announce_me', 'set_count']
+    _tell = ['attach_printer', 'attach_group', 'attach_sequencer', 'multicast', 'receive', 'process_msg', 'check_queue', 'announce_me', 'set_count', 'leave_group']
     _ask = ['get_count', 'is_sequencer', 'get_id', 'get_messages', 'get_wait_queue']
     _ref = ['attach_printer', 'attach_group', 'attach_sequencer', 'get_count']
 
@@ -43,7 +43,7 @@ class Peer:
     def attach_group(self, group):
         self.group = group
         self.sequencer, self.last_count_processed = self.group.join(self)
-        self.interval = interval(self.host, 3, self.proxy, 'announce_me')
+        self.interval_announce = interval(self.host, 3, self.proxy, 'announce_me')
 
     def attach_sequencer(self, sequencer):
         self.sequencer = sequencer
@@ -51,14 +51,21 @@ class Peer:
     def get_id(self):
         return self.id
 
+    def leave_group(self):
+        self.interval_announce.set()
+        self.group.leave(self)
+
     def multicast(self, msg):
-        priority = self.sequencer.get_count()
-        for peer in self.group.get_members():
-            peer.receive(priority, msg)
+        try:
+            priority = self.sequencer.get_count()
+            for peer in self.group.get_members():
+                peer.receive(priority, msg)
+        except TimeoutError:
+            print self.id, "TimeoutError get count"
         # self.printer.to_print(str(self.id) + " msg: " + msg + " priority: " + str(priority))
 
     def receive(self, priority, msg):
-        self.printer.to_print(self.id + " receive " + str(self.last_count_processed) + " " + str(priority-1))
+        # self.printer.to_print(self.id + " receive " + str(self.last_count_processed) + " " + str(priority-1))
         if(self.last_count_processed == (priority - 1)):
             self.process_msg(priority, msg)
             while not self.wait_queue.empty():
@@ -85,7 +92,7 @@ class Peer:
         return sorted(self.wait_queue.queue, key=lambda t: t[0])
 
     def announce_me(self):
-        self.group.announce(self.proxy)
+        self.group.announce(self)
 
     def get_count(self):
         self.count += 1

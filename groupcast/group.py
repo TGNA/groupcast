@@ -28,7 +28,7 @@ class Group():
         self.peers[peer] = datetime.now()
         if(len(self.peers.keys()) == 1):
             self.sequencer = peer
-
+            print "Sequencer: ", peer.get_id()
         if self.last_known_count is None:
             count = -1
         else:
@@ -37,13 +37,14 @@ class Group():
         return (self.sequencer, count)
 
     def leave(self, peer):
-        self.peers.pop(peer)
-        if self.sequencer == peer and len(self.peers.values()) > 0:
-            peer = choice(self.peers.keys())
-            peer.set_count(self.last_known_count)
+        del self.peers[peer]
+        if self.sequencer == peer and len(self.peers.keys()) > 0:
+            self.sequencer = choice(self.peers.keys())
+            self.sequencer.set_count(self.last_known_count)
 
             for p in self.peers.keys():
-                p.attach_sequencer(peer)
+                p.attach_sequencer(self.sequencer)
+            print "New sequencer: ", self.sequencer.get_id() #, "Remove peer: ", peer.get_id()
 
     def get_members(self):
         return self.peers.keys()
