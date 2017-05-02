@@ -16,7 +16,7 @@ class Group():
     def __init__(self):
         self.peers = {}
         self.sequencer = None
-        self.last_known_count = 0
+        self.last_known_count = None
 
     def init_start(self):
         self.interval_check = interval(self.host, 1, self.proxy, 'remove_unannounced')
@@ -28,7 +28,13 @@ class Group():
         self.peers[peer] = datetime.now()
         if(len(self.peers.keys()) == 1):
             self.sequencer = peer
-        return self.sequencer
+
+        if self.last_known_count is None:
+            count = -1
+        else:
+            count = self.last_known_count
+
+        return (self.sequencer, count)
 
     def leave(self, peer):
         self.peers.pop(peer)

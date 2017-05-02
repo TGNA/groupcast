@@ -11,28 +11,63 @@ from random import choice
 
 set_context()
 host = create_host()
-
-N = 3                                       # Number of Peers
 peers = []
 
 printer = host.spawn('printer', Printer)
 
-# Group
 group = host.spawn('Group', Group)
 group.attach_printer(printer)
 group.init_start()
 
 # Peers
-for i in range(N):
-    p = host.spawn('Peer' + str(i), Peer) # Spawn Peer
-    p.attach_group(group)            # Attach Group
+for i in xrange(3):
+    p = host.spawn('Peer' + str(i), Peer)  # Spawn Peer
+    p.attach_group(group)                  # Attach Group
     p.attach_printer(printer)
     peers.append(p)
 
-for i in range(10):
-    choice(peers).multicast(str(i))
+for i in xrange(10):
+    p = choice(peers)
+    p.multicast(str(i))
+    sleep(0.2)
+    # print str(p.get_id())+" msg: "+str(i)
 
-sleep(3)
+p = host.spawn('Peer3', Peer)  # Spawn Peer
+p.attach_group(group)          # Attach Group
+p.attach_printer(printer)
+peers.append(p)
+
+p = host.spawn('Peer4', Peer)  # Spawn Peer
+p.attach_group(group)          # Attach Group
+p.attach_printer(printer)
+peers.append(p)
+
+p = host.spawn('Peer5', Peer)  # Spawn Peer
+p.attach_group(group)          # Attach Group
+p.attach_printer(printer)
+peers.append(p)
+
+p = host.spawn('Peer6', Peer)  # Spawn Peer
+p.attach_group(group)          # Attach Group
+p.attach_printer(printer)
+peers.append(p)
+
+for i in xrange(10, 20):
+    p = choice(peers)
+    p.multicast(str(i))
+    sleep(0.2)
+    # printer.to_print(str(p.get_id()) + " msg: " + str(i))
+
+sleep(4)
 
 for peer in peers:
-    print (peer.get_id() + ": " + ",".join(peer.get_queue()))
+    print peer.get_id()
+    print ",".join(peer.get_messages())
+    arr_str = []
+    for p, m in peer.get_wait_queue():
+        arr_str.append("("+str(p)+","+m+")")
+    print ",".join(arr_str)
+    print "====="
+
+for peer in peers:
+    print peer.get_id(), ",".join(peer.get_messages())
