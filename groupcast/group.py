@@ -6,16 +6,17 @@ Made by: Oscar Blanco and Victor Colome
 from datetime import datetime
 from pyactor.context import interval
 from random import choice
+from groupcast.peer import Peer
 
 
 class Group():
-    _tell = ['attach_printer', 'leave', 'init_start', 'remove_unannounced', 'announce', 'update_count']
+    _tell = ['init_start', 'attach_printer', 'leave', 'remove_unannounced', 'announce', 'update_count']
     _ask = ['join', 'get_members']
-    _ref = ['attach_printer', 'join', 'leave', 'get_members', 'announce', 'update_count']
+    _ref = ['attach_printer', 'join', 'leave', 'get_members', 'announce']
 
     def __init__(self):
         self.peers = {}
-        self.sequencer = None
+        self.sequencer_url = None
         self.last_known_count = None
 
     def init_start(self):
@@ -27,24 +28,27 @@ class Group():
     def join(self, peer):
         self.peers[peer] = datetime.now()
         if(len(self.peers.keys()) == 1):
-            self.sequencer = peer
-            print "Sequencer: ", peer.get_id()
+            self.sequencer_url = peer
+            self.printer.to_print("New sequencer: " + self.sequencer_url)
+
         if self.last_known_count is None:
             count = -1
         else:
             count = self.last_known_count
 
-        return (self.sequencer, count)
+        return (self.sequencer_url, count)
 
     def leave(self, peer):
         del self.peers[peer]
-        if self.sequencer == peer and len(self.peers.keys()) > 0:
-            self.sequencer = choice(self.peers.keys())
-            self.sequencer.set_count(self.last_known_count)
+        if self.sequencer_url == peer and len(self.peers.keys()) > 0:
+            self.sequencer_url = choice(self.peers.keys())
+            self.printer.to_print("New sequencer: "+self.sequencer_url)
+            sequencer = self.host.lookup_url(self.sequencer_url, Peer)
+            sequencer.set_count(self.last_known_count)
 
-            for p in self.peers.keys():
-                p.attach_sequencer(self.sequencer)
-            print "New sequencer: ", self.sequencer.get_id() #, "Remove peer: ", peer.get_id()
+            for peer_url in self.peers.keys():
+                p = self.host.lookup_url(peer_url, Peer)
+                p.attach_sequencer(self.sequencer_url)
 
     def get_members(self):
         return self.peers.keys()

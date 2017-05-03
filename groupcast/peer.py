@@ -8,32 +8,16 @@ from Queue import PriorityQueue
 from pyactor.context import interval
 from pyactor.exceptions import TimeoutError
 
-import heapq
-
-class UniquePriorityQueue(PriorityQueue):
-    def _init(self, maxsize):
-        PriorityQueue._init(self, maxsize)
-        self.priorities = set()
-
-    def _put(self, item, heappush=heapq.heappush):
-        if item[0] not in self.priorities:
-            self.priorities.add(item[0])
-            PriorityQueue._put(self, item, heappush)
-
-    def _get(self, heappop=heapq.heappop):
-        item = PriorityQueue._get(self, heappop)
-        self.priorities.remove(item[0])
-        return item
-
 
 class Peer:
-    _tell = ['attach_printer', 'attach_group', 'attach_sequencer', 'multicast', 'receive', 'process_msg', 'check_queue', 'announce_me', 'set_count', 'leave_group']
-    _ask = ['get_count', 'is_sequencer', 'get_id', 'get_messages', 'get_wait_queue']
-    _ref = ['attach_printer', 'attach_group', 'attach_sequencer', 'get_count']
+    _tell = ['attach_printer', 'attach_group', 'attach_sequencer', 'leave_group', 'multicast', 'receive', 'process_msg',
+             'announce_me', 'set_count', 'send_multicast']
+    _ask = ['get_id', 'get_messages', 'get_wait_queue', 'get_count']
+    _ref = ['attach_printer', 'attach_group', 'attach_sequencer']
 
     def __init__(self):
         self.messages = []
-        self.wait_queue = UniquePriorityQueue()
+        self.wait_queue = PriorityQueue()
         self.count = -1
         self.last_count_processed = -1
 
@@ -42,30 +26,42 @@ class Peer:
 
     def attach_group(self, group):
         self.group = group
-        self.sequencer, self.last_count_processed = self.group.join(self)
+        sequencer_url, self.last_count_processed = self.group.join(self.url)
+        self.sequencer = self.host.lookup_url(sequencer_url, Peer)
         self.interval_announce = interval(self.host, 3, self.proxy, 'announce_me')
 
-    def attach_sequencer(self, sequencer):
-        self.sequencer = sequencer
+    def attach_sequencer(self, sequencer_url):
+        try:
+            self.sequencer = self.host.lookup_url(sequencer_url, Peer)
+        except Exception as e:
+            self.printer.to_print(self.id+" attach_sequencer "+str(e)+" "+sequencer_url)
+        # self.printer.to_print(str(self.id) + " attach seq: "+sequencer_url)
 
     def get_id(self):
         return self.id
 
     def leave_group(self):
+        self.printer.to_print("Leave: "+self.url)
         self.interval_announce.set()
-        self.group.leave(self)
+        self.group.leave(self.url)
 
     def multicast(self, msg):
+        future = self.sequencer.get_count(future = True)
+        future.msg = msg
+        future.add_callback('send_multicast')
+
+    def send_multicast(self, future):
         try:
-            priority = self.sequencer.get_count()
-            for peer in self.group.get_members():
-                peer.receive(priority, msg)
-        except TimeoutError:
-            print self.id, "TimeoutError get count"
-        # self.printer.to_print(str(self.id) + " msg: " + msg + " priority: " + str(priority))
+            priority = future.result()
+            # self.printer.to_print(str(self.id) + " seq: "+ str(self.sequencer) +"prio: "+str(priority) + "msg:"+ str(future.msg))
+            for peer_url in self.group.get_members():
+                peer = self.host.lookup_url(peer_url, Peer)
+                peer.receive(priority, future.msg)
+        except Exception as e:
+            self.printer.to_print(self.id+str(e))
+            # print self.id, e, " msg ", future.msg, " sequencer ", self.sequencer
 
     def receive(self, priority, msg):
-        # self.printer.to_print(self.id + " receive " + str(self.last_count_processed) + " " + str(priority-1))
         if(self.last_count_processed == (priority - 1)):
             self.process_msg(priority, msg)
             while not self.wait_queue.empty():
@@ -74,11 +70,9 @@ class Peer:
                     self.process_msg(priority, msg)
                 else:
                     self.wait_queue.put((priority, msg))
-                    return
+                    break
         else:
             self.wait_queue.put((priority, msg))
-        # self.wait_queue.put((priority, msg))
-        # self.check_queue()
 
     def process_msg(self, priority, msg):
         #self.printer.to_print(self.id + " process_msg " + str(priority) + " " + msg)
@@ -92,7 +86,7 @@ class Peer:
         return sorted(self.wait_queue.queue, key=lambda t: t[0])
 
     def announce_me(self):
-        self.group.announce(self)
+        self.group.announce(self.url)
 
     def get_count(self):
         self.count += 1
