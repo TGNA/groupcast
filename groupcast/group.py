@@ -9,7 +9,7 @@ from random import choice
 from groupcast.peer import Peer
 
 
-class Group():
+class Group:
     _tell = ['init_start', 'attach_printer', 'leave', 'remove_unannounced', 'announce', 'update_count']
     _ask = ['join', 'get_members']
     _ref = ['attach_printer', 'join', 'leave', 'get_members', 'announce']
