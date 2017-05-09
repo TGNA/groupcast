@@ -1,6 +1,6 @@
 from groupcast.peer import Sequencer, Lamport
 from groupcast.monitor import Monitor
-from pyactor.context import set_context, create_host, sleep, serve_forever, interval
+from pyactor.context import set_context, create_host, sleep, serve_forever
 from random import choice, uniform
 
 
@@ -33,6 +33,8 @@ if __name__ == "__main__":
 
     monitor = host.lookup_url('http://127.0.0.1:6001/monitor', 'Monitor', 'groupcast.monitor')
     group = host.lookup_url('http://127.0.0.1:6001/group', 'Group', 'groupcast.group')
+
+    monitor = host.spawn('monitor', Monitor)
 
     create_peers(0, N)
 
