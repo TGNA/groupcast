@@ -1,39 +1,34 @@
-'''
-Peer
-Made by: Oscar Blanco and Victor Colome
-'''
-
-
 from Queue import PriorityQueue
-from pyactor.context import interval
+from pyactor.context import interval, sleep
 
 
-class Peer:
-    _tell = ['attach', 'attach_printer', 'attach_group', 'attach_sequencer', 'leave_group', 'announce_me']
-    _ask = ['get_id', 'get_messages', 'get_wait_queue']
-    _ref = ['attach', 'attach_printer', 'attach_group']
+class Peer(object):
+    _tell = ['attach', 'attach_monitor', 'attach_group', 'attach_sequencer', 'leave_group', 'announce_me', 'set_count']
+    _ask = ['get_id', 'get_messages', 'get_wait_queue', 'get_count']
+    _ref = ['attach', 'attach_monitor', 'attach_group']
 
     def __init__(self):
         self.messages = []
         self.wait_queue = PriorityQueue()
+        self.count = -1
 
-    def attach(self, printer, group):
-        self.attach_printer(printer)
+    def attach(self, monitor, group):
+        self.attach_monitor(monitor)
         self.attach_group(group)
 
-    def attach_printer(self, printer):
-        self.printer = printer
+    def attach_monitor(self, monitor):
+        self.monitor = monitor
 
     def attach_group(self, group):
         self.group = group
         sequencer_url, self.last_count_processed = self.group.join(self.url)
-        self.sequencer = self.host.lookup_url(sequencer_url, Peer)
+        self.sequencer = self.host.lookup_url(sequencer_url, 'Peer', 'groupcast.peer')
         self.interval_announce = interval(self.host, 3, self.proxy, 'announce_me')
 
     def attach_sequencer(self, sequencer_url):
         while True:
             try:
-                self.sequencer = self.host.lookup_url(sequencer_url, Peer)
+                self.sequencer = self.host.lookup_url(sequencer_url, 'Peer', 'groupcast.peer')
             except Exception:
                 continue
             break
@@ -42,7 +37,7 @@ class Peer:
         return self.id
 
     def leave_group(self):
-        self.printer.to_print("Leave: "+self.url)
+        self.monitor.to_print("Leave: "+self.url)
         self.interval_announce.set()
         self.group.leave(self.url)
 
@@ -55,25 +50,33 @@ class Peer:
     def announce_me(self):
         self.group.announce(self.url)
 
+    def get_count(self):
+        self.count += 1
+        self.group.update_count(self.count)
+        return self.count
+
+    def set_count(self, count):
+        self.count = count
+
 
 class Sequencer(Peer):
-    _tell = Peer._tell + ['multicast', 'receive', 'process_msg', 'set_count', 'send_multicast']
-    _ask = Peer._ask + ['get_count']
+    _tell = Peer._tell + ['multicast', 'receive', 'process_msg', 'send_multicast']
 
     def __init__(self):
         Peer.__init__(self)
-        self.count = -1
         self.last_count_processed = -1
 
-    def multicast(self, msg):
+    def multicast(self, msg, delay = 0):
         future = self.sequencer.get_count(future = True)
         future.msg = msg
+        future.delay = delay
         future.add_callback('send_multicast')
 
     def send_multicast(self, future):
+        sleep(future.delay)
         priority = future.result()
         for peer_url in self.group.get_members():
-            peer = self.host.lookup_url(peer_url, Peer)
+            peer = self.host.lookup_url(peer_url, 'Peer', 'groupcast.peer')
             peer.receive(priority, future.msg)
 
     def receive(self, priority, msg):
@@ -92,14 +95,7 @@ class Sequencer(Peer):
     def process_msg(self, priority, msg):
         self.last_count_processed = priority
         self.messages.append(msg)
-
-    def get_count(self):
-        self.count += 1
-        self.group.update_count(self.count)
-        return self.count
-
-    def set_count(self, count):
-        self.count = count
+        self.monitor.monitor(self.id, msg)
 
 
 class Lamport(Peer):
