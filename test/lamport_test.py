@@ -2,7 +2,7 @@ import unittest
 from pyactor.context import set_context, create_host, shutdown, sleep
 from groupcast.monitor import Monitor
 from groupcast.group import Group
-from groupcast.peer import Sequencer
+from groupcast.peer import Lamport
 
 
 class SequencerTest(unittest.TestCase):
@@ -20,11 +20,10 @@ class SequencerTest(unittest.TestCase):
         group.attach_monitor(monitor)
         group.init_start()
 
-        peer0 = self.host.spawn('peer0', Sequencer)
+        peer0 = self.host.spawn('peer0', Lamport)
         peer0.attach(monitor, group)
 
-        self.assertEqual(('local://local:6666/peer0', False), peer0.get_sequencer_url())
-
+        sleep(0.5)
         peer0.multicast('1')
         peer0.multicast('2')
 
@@ -34,24 +33,18 @@ class SequencerTest(unittest.TestCase):
 
         self.assertEqual([], peer0.get_wait_queue())
 
-        peer1 = self.host.spawn('peer1', Sequencer)
+        peer1 = self.host.spawn('peer1', Lamport)
         peer1.attach(monitor, group)
 
         sleep(1)
         peer0.leave_group()
         sleep(1)
 
-        peer2 = self.host.spawn('peer2', Sequencer)
+        peer2 = self.host.spawn('peer2', Lamport)
         peer2.attach(monitor, group)
         sleep(0.5)
-        peer3 = self.host.spawn('peer3', Sequencer)
+        peer3 = self.host.spawn('peer3', Lamport)
         peer3.attach(monitor, group)
-
-        sleep(2)
-
-        self.assertEqual(('local://local:6666/peer2', False), peer1.get_sequencer_url())
-        self.assertEqual(('local://local:6666/peer2', False), peer2.get_sequencer_url())
-        self.assertEqual(('local://local:6666/peer2', False), peer3.get_sequencer_url())
 
         monitor.stop_monitoring()
 

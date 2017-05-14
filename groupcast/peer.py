@@ -43,7 +43,7 @@ class Peer(object):
     def announce_me(self):
         self.group.announce(self.url)
 
-    def lookup(self, url, type, module='groupcast.peer'):
+    def lookup(self, url, klass, module='groupcast.peer'):
         try:
             if url == self.url:
                 return self.proxy
@@ -51,7 +51,7 @@ class Peer(object):
                 return self.lookups[url]
         except KeyError:
             try:
-                future = self.host.lookup_url(url, type, module, future=True)
+                future = self.host.lookup_url(url, klass, module, future=True)
                 self.lookups[url] = future.result()
                 return self.lookups[url]
             except Exception:
