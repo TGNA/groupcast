@@ -1,57 +1,39 @@
-from groupcast.peer import Sequencer, Lamport
+from groupcast.peer import *
 from groupcast.group import Group
 from groupcast.monitor import Monitor
-from pyactor.context import set_context, create_host, sleep, serve_forever
-from random import choice, uniform
+from pyactor.context import set_context, create_host, serve_forever
+from util import *
+from random import uniform
 
 
 N = 4  # n. peers, it creates the double
 M = 10  # n. messages, it creates the double
-T = Sequencer  # type: Sequencer | Lamport
-
-
-def create_peers(s, e):
-    for i in xrange(s, e):
-        p = host.spawn('Peer' + str(i), T)
-        p.attach(monitor, group)
-        peers.append(p)
-        sleep(0.5)
-
-
-def create_messages(s, e, leave = []):
-    aux = list(set(peers) - set(leave))
-    for i in xrange(s, e):
-        p = choice(aux)
-        delay = uniform(0.1, 0.9)
-        p.multicast(str(i), delay)
-        sleep(0.5)
+T = Lamport  # type: Sequencer | Lamport
 
 
 if __name__ == "__main__":
-    set_context()
+    set_context('green_thread')
     host = create_host()
-    peers = []
-    leave = []
+    peers = {}
 
     monitor = host.spawn('monitor', Monitor)
-    monitor.to_print("Using: "+str(T)+"\n")
+    monitor.to_print("Using: " + T.__name__ + "\n")
     monitor.start_monitoring()
 
-    group = host.spawn('Group', Group)
+    group = host.spawn('group', Group)
     group.attach_monitor(monitor)
     group.init_start()
 
-    create_peers(0, N)
+    create_peers(0, N, peers, group, monitor, T, host)
 
-    create_messages(0, M)
+    create_messages(0, M, peers, uniform(0.1, 0.6))
 
     sleep(1)
-    leave.append(peers[0])
-    peers[0].leave_group()
-    sleep(1)
+    peer_leave_group(peers, 'peer00')
+    sleep(3)
 
-    create_peers(N, N+N)
+    create_peers(N, N+N, peers, group, monitor, T, host)
 
-    create_messages(M, M+M, leave)
+    create_messages(M, M+M, peers, uniform(0.1, 0.6))
 
     serve_forever()

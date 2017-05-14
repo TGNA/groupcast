@@ -2,7 +2,8 @@ from pyactor.context import interval
 
 
 class Monitor(object):
-    _tell = ['to_print', 'start_monitoring', 'stop_monitoring', 'monitor', 'print_table']
+    _tell = ['to_print', 'start_monitoring', 'stop_monitoring', 'monitor',
+             'print_table']
 
     def __init__(self):
         self.peers = {}
@@ -12,7 +13,8 @@ class Monitor(object):
         print string
 
     def start_monitoring(self):
-        self.interval_monitoring = interval(self.host, 1, self.proxy, 'print_table')
+        self.interval_monitoring = interval(self.host, 1, self.proxy,
+                                            'print_table')
 
     def stop_monitoring(self):
         self.interval_monitoring.set()
@@ -28,8 +30,9 @@ class Monitor(object):
         if self.printed:
             printer = ""
 
-            for peer, content in sorted(self.peers.items(), key=lambda t: t[0]):
-                printer += (peer+": "+",".join(content)+"\n")
+            peers = sorted(self.peers.items(), key=lambda t: t[0])
+            for peer, data in peers:
+                printer += (peer+": "+",".join(data)+"\n")
 
             self.to_print(printer)
             self.printed = False
