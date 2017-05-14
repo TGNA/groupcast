@@ -5,7 +5,7 @@ from groupcast.group import Group
 from groupcast.peer import Lamport
 
 
-class SequencerTest(unittest.TestCase):
+class LamportTest(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
