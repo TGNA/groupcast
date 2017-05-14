@@ -5,16 +5,22 @@ from groupcast.monitor import Monitor
 
 
 class GroupTest(unittest.TestCase):
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        set_context()
-        self.host = create_host()
 
     def test_group(self):
-        monitor = self.host.spawn('monitor', Monitor)
+        try:
+            set_context()
+        except:
+            pass
 
-        group = self.host.spawn('group', Group)
+        try:
+            host = create_host()
+        except:
+            shutdown()
+            host = create_host()
+
+        monitor = host.spawn('monitor', Monitor)
+
+        group = host.spawn('group', Group)
         group.attach_monitor(monitor)
         group.init_start()
 
@@ -32,8 +38,6 @@ class GroupTest(unittest.TestCase):
 
         self.assertEqual([], group.get_members())
 
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
         shutdown()
 
 if __name__ == '__main__':
