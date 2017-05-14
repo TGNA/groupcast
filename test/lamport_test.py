@@ -6,13 +6,11 @@ from groupcast.peer import Lamport
 
 
 class LamportTest(unittest.TestCase):
-    def setUp(self):
-        unittest.TestCase.setUp(self)
 
+    def test_lamport(self):
         set_context()
         self.host = create_host()
 
-    def test_sequencer(self):
         monitor = self.host.spawn('monitor', Monitor)
         monitor.start_monitoring()
 
@@ -48,8 +46,6 @@ class LamportTest(unittest.TestCase):
 
         monitor.stop_monitoring()
 
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
         shutdown()
 
 if __name__ == '__main__':

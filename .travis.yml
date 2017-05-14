@@ -9,7 +9,7 @@ install:
     - pip install codecov
 script:
     - find ./groupcast -name \*.py -exec pycodestyle {} +
-    - nosetests -v --with-coverage --cover-erase --cover-package=groupcast
+    - nosetests -vx --with-coverage --cover-erase --cover-package=groupcast
 after_success:
     - coveralls
     - codecov
