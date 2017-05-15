@@ -1,6 +1,6 @@
-from groupcast.peer import *
+from groupcast.peer import Sequencer  # Lamport
 from pyactor.context import set_context, create_host, serve_forever
-from util import *
+from util import create_messages, create_peers
 
 
 N = 4  # n. peers, it creates the double

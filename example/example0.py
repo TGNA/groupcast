@@ -1,8 +1,8 @@
-from groupcast.peer import *
+from groupcast.peer import Lamport  # Sequencer
 from groupcast.group import Group
 from groupcast.monitor import Monitor
 from pyactor.context import set_context, create_host, serve_forever
-from util import *
+from util import create_peers, create_messages
 from random import uniform
 
 
