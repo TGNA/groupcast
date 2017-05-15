@@ -1,7 +1,6 @@
 import unittest
 from pyactor.context import set_context, create_host, shutdown
 from groupcast.group import Group
-from groupcast.monitor import Monitor
 
 
 class GroupTest(unittest.TestCase):
@@ -11,10 +10,7 @@ class GroupTest(unittest.TestCase):
         self.host = create_host()
 
     def test_group(self):
-        monitor = self.host.spawn('monitor', Monitor)
-
         group = self.host.spawn('group', Group)
-        group.attach_monitor(monitor)
         group.init_start()
 
         group.announce('1')

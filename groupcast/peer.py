@@ -135,7 +135,10 @@ class Sequencer(Peer):
     def process_msg(self, priority, msg):
         self.last_count_processed = priority
         self.messages.append(msg)
-        self.monitor.monitor(self.id, msg)
+        try:
+            self.monitor.monitor(self.id, msg)
+        except AttributeError:
+            pass
 
     def get_wait_queue(self):
         return sorted(self.wait_queue.queue, key=lambda t: t[0])
@@ -150,17 +153,26 @@ class Sequencer(Peer):
     def start_elections(self):
         if not self.in_elections.locked():
             self.in_elections.acquire()
-            self.monitor.to_print("Starting elections from "+self.id)
+            try:
+                self.monitor.to_print("Starting elections from "+self.id)
+            except AttributeError:
+                pass
             votes = set([self.url])
             members = self.group.get_members()
 
             for peer_url in members:
                 peer = self.lookup(peer_url, 'Sequencer')
                 votes.add(peer.vote())
-                self.monitor.to_print("Vote: "+peer_url)
-
+                try:
+                    self.monitor.to_print("Vote: "+peer_url)
+                except AttributeError:
+                    pass
             new_coordinator_url = max(votes)
-            self.monitor.to_print("New sequencer:"+new_coordinator_url+"\n")
+
+            try:
+                self.monitor.to_print("New sequencer:"+new_coordinator_url+"\n")
+            except AttributeError:
+                pass
 
             if new_coordinator_url == self.url:
                 last_count = self.get_count()
@@ -237,7 +249,10 @@ class Lamport(Peer):
 
     def process_msg(self, msg):
         self.messages.append(msg)
-        self.monitor.monitor(self.id, msg)
+        try:
+            self.monitor.monitor(self.id, msg)
+        except AttributeError:
+            pass
 
     def get_wait_queue(self):
         return self.wait_queue.queue()

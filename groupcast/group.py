@@ -33,4 +33,7 @@ class Group(object):
 
     def leave(self, peer):
         del self.peers[peer]
-        self.monitor.to_print("Leave: " + peer + "\n")
+        try:
+            self.monitor.to_print("Leave: " + peer + "\n")
+        except AttributeError:
+            pass
