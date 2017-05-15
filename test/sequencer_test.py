@@ -6,26 +6,20 @@ from groupcast.peer import Sequencer
 
 
 class SequencerTest(unittest.TestCase):
+
+    def setUp(self):
+        set_context()
+        self.host = create_host()
+
     def test_sequencer(self):
-        try:
-            set_context()
-        except:
-            pass
-
-        try:
-            host = create_host()
-        except:
-            shutdown()
-            host = create_host()
-
-        monitor = host.spawn('monitor', Monitor)
+        monitor = self.host.spawn('monitor', Monitor)
         monitor.start_monitoring()
 
-        group = host.spawn('group', Group)
+        group = self.host.spawn('group', Group)
         group.attach_monitor(monitor)
         group.init_start()
 
-        peer0 = host.spawn('peer0', Sequencer)
+        peer0 = self.host.spawn('peer0', Sequencer)
         peer0.attach(monitor, group)
 
         self.assertEqual(('local://local:6666/peer0', False), peer0.get_sequencer_url())
@@ -39,17 +33,17 @@ class SequencerTest(unittest.TestCase):
 
         self.assertEqual([], peer0.get_wait_queue())
 
-        peer1 = host.spawn('peer1', Sequencer)
+        peer1 = self.host.spawn('peer1', Sequencer)
         peer1.attach(monitor, group)
 
         sleep(1)
         peer0.leave_group()
         sleep(1)
 
-        peer2 = host.spawn('peer2', Sequencer)
+        peer2 = self.host.spawn('peer2', Sequencer)
         peer2.attach(monitor, group)
         sleep(0.5)
-        peer3 = host.spawn('peer3', Sequencer)
+        peer3 = self.host.spawn('peer3', Sequencer)
         peer3.attach(monitor, group)
 
         sleep(2)
@@ -60,6 +54,7 @@ class SequencerTest(unittest.TestCase):
 
         monitor.stop_monitoring()
 
+    def tearDown(self):
         shutdown()
 
 if __name__ == '__main__':
