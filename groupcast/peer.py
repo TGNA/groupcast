@@ -167,24 +167,24 @@ class Sequencer(Peer):
                     self.monitor.to_print("Vote: "+peer_url)
                 except AttributeError:
                     pass
-            new_coordinator_url = max(votes)
+            new_cordinator_url = max(votes)
 
             try:
-                self.monitor.to_print("New sequencer:"+new_coordinator_url+"\n")
+                self.monitor.to_print("New sequencer:"+new_cordinator_url+"\n")
             except AttributeError:
                 pass
 
-            if new_coordinator_url == self.url:
+            if new_cordinator_url == self.url:
                 last_count = self.get_count()
             else:
-                new_coordinator = self.lookup(new_coordinator_url, 'Sequencer')
+                new_coordinator = self.lookup(new_cordinator_url, 'Sequencer')
                 last_count = new_coordinator.get_count()
 
-            self.attach_sequencer(new_coordinator_url, last_count)
+            self.attach_sequencer(new_cordinator_url, last_count)
             members = self.group.get_members()
             for peer_url in members:
                 peer = self.lookup(peer_url, 'Sequencer')
-                peer.attach_sequencer(new_coordinator_url, last_count)
+                peer.attach_sequencer(new_cordinator_url, last_count)
 
     def vote(self):
         self.in_elections.acquire()
