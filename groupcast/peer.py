@@ -57,13 +57,13 @@ class Peer(object):
             except Exception:
                 raise NotFoundError
 
-    def get_wait_queue(self, *args, **kwargs):
+    def get_wait_queue(self):
         raise NotImplementedError
 
-    def multicast(self, *args, **kwargs):
+    def multicast(self):
         raise NotImplementedError
 
-    def receive(self, *args, **kwargs):
+    def receive(self):
         raise NotImplementedError
 
 
