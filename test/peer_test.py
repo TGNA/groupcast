@@ -83,7 +83,7 @@ class PeerTest(unittest.TestCase):
 
         peer2 = self.host.spawn('peer2', Sequencer)
         peer2.attach_group(group)
-        sleep(0.5)
+        sleep(0.1)
         peer3 = self.host.spawn('peer3', Sequencer)
         peer3.attach_group(group)
 
